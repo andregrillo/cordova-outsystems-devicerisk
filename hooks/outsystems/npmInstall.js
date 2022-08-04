@@ -1,19 +1,21 @@
-
-console.log("Running hook to install NodeJS requirements");
+const child_process = require('child_process');
+const {isCordovaAbove,log} = require("../common");
 
 module.exports = function (context) {
-  var child_process = require('child_process'),
-      deferral = require('q').defer();
+    var cordovaAbove8 = isCordovaAbove(context, 8);
+    if (!cordovaAbove8) {
+      console.log("====NPM Install!====");
+      var deferral = context.requireCordovaModule("q").defer();
+      child_process.exec('npm install', {cwd:__dirname},
+        function (error) {
+          if (error !== null) {
+            log('exec error: ' + error,"red");
+            deferral.reject('npm installation failed');
+          }
+          deferral.resolve();
+      });
 
-  var output = child_process.exec('npm install', {cwd: __dirname}, function (error) {
-    if (error !== null) {
-      console.log('exec error: ' + error);
-      deferral.reject('npm installation failed');
+      return deferral.promise;
     }
-    else {
-      deferral.resolve();
-    }
-  });
-
-  return deferral.promise;
+    return;
 };
